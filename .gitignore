@@ -1,0 +1,17 @@
+# Ambiente e cache
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Segreti Streamlit (non vanno mai committati)
+.streamlit/secrets.toml
+
+# Log e file di debug (rigenerati a runtime)
+data/refresh.log
+data/launchd.out.log
+data/launchd.err.log
+data/_debug_eu_raw.json
+
+# NB: data/bandi.db è VOLUTAMENTE tracciato, così l'app in cloud parte
+# già popolata e GitHub Actions lo aggiorna ogni giorno.
