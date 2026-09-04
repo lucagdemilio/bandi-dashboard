@@ -119,34 +119,74 @@ df["giorni_scadenza"] = (df["data_scadenza_dt"] - oggi).dt.days
 df.loc[df["giorni_scadenza"] < 0, "giorni_scadenza"] = pd.NA
 
 # ======================= FILTRI (menù a tendina) =======================
+def _reset_filtri():
+    for k in ["f_kw", "f_fonte", "f_benef", "f_stato", "f_settore",
+              "f_ateco", "f_ateco_comp", "f_imprese", "f_scad", "f_ordina"]:
+        st.session_state.pop(k, None)
+
 with st.expander("Filtri e ricerca", expanded=False, icon=":material/filter_alt:"):
-    a1, a2, a3, a4 = st.columns(4)
+    keyword = st.text_input("Ricerca libera", key="f_kw",
+                            placeholder="Cerca per titolo, ente o settore…")
+
+    st.markdown(ui.section("Fonte e destinatari"), unsafe_allow_html=True)
+    a1, a2, a3 = st.columns(3)
     with a1:
-        fonte_filtro = st.multiselect("Fonte", options=sorted(df["fonte"].dropna().unique()))
+        fonte_filtro = st.multiselect("Fonte", sorted(df["fonte"].dropna().unique()), key="f_fonte")
     with a2:
         benef_opzioni = sorted(df["beneficiari"].dropna().unique()) if "beneficiari" in df.columns else []
-        benef_filtro = st.multiselect("Beneficiari", options=benef_opzioni)
+        benef_filtro = st.multiselect("Beneficiari", benef_opzioni, key="f_benef")
     with a3:
-        stato_filtro = st.multiselect("Stato", options=sorted(df["stato"].dropna().unique()))
-    with a4:
-        settore_filtro = st.multiselect("Settore", options=SETTORI_MACRO)
+        stato_filtro = st.multiselect("Stato", sorted(df["stato"].dropna().unique()), key="f_stato")
 
-    b1, b2, b3, b4 = st.columns(4)
+    st.markdown(ui.section("Settore di attività"), unsafe_allow_html=True)
+    b1, b2 = st.columns([3, 2])
     with b1:
-        keyword = st.text_input("Cerca (titolo, ente, settore)")
+        settore_filtro = st.multiselect("Macro-settore", SETTORI_MACRO, key="f_settore")
     with b2:
-        ateco_input = st.text_input("Codice ATECO azienda", placeholder="es. 62.01, 56.10")
-        solo_ateco_comp = st.checkbox("Solo settore compatibile", value=False,
-                                      help="Nasconde i bandi privi di classificazione ATECO (UE/regionali).")
-    with b3:
-        solo_imprese = st.checkbox("Solo pertinenti a imprese", value=True,
+        ateco_input = st.text_input("Codice ATECO azienda", key="f_ateco", placeholder="es. 62.01, 56.10")
+    solo_ateco_comp = st.checkbox("Mostra solo bandi con settore ATECO compatibile", key="f_ateco_comp",
+                                  help="Nasconde i bandi privi di classificazione ATECO (UE/regionali).")
+
+    st.markdown(ui.section("Opzioni e ordinamento"), unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    with c1:
+        solo_imprese = st.checkbox("Solo pertinenti a imprese", value=True, key="f_imprese",
                                    help="Esclude i bandi UE di pura ricerca accademica.")
-        solo_scad_futura = st.checkbox("Solo con scadenza futura", value=False)
-    with b4:
+        solo_scad_futura = st.checkbox("Solo con scadenza futura", key="f_scad")
+    with c2:
         ordina_per = st.selectbox("Ordina per",
-                                  ["Scadenza (più imminente)", "Scadenza (più lontana)", "Titolo (A-Z)"])
+                                  ["Scadenza (più imminente)", "Scadenza (più lontana)", "Titolo (A-Z)"],
+                                  key="f_ordina")
+    # Pulsante "Reimposta" allineato al margine destro della tendina
+    _sp, c_reset = st.columns([4, 1])
+    with c_reset:
+        st.button("Reimposta", icon=":material/restart_alt:", on_click=_reset_filtri,
+                  type="secondary", use_container_width=True)
 
 ateco_query = parse_ateco_codes(ateco_input) if ateco_input else []
+
+# Chip riassuntivi dei filtri attivi (sotto la tendina)
+_chips = []
+if fonte_filtro:
+    _chips.append(("Fonte:", ", ".join(fonte_filtro)))
+if benef_filtro:
+    _chips.append(("Beneficiari:", ", ".join(benef_filtro)))
+if stato_filtro:
+    _chips.append(("Stato:", ", ".join(stato_filtro)))
+if settore_filtro:
+    _chips.append(("Settore:", ", ".join(settore_filtro)))
+if ateco_query:
+    _chips.append(("ATECO:", ", ".join(ateco_query)))
+if keyword:
+    _chips.append(("Ricerca:", keyword))
+if solo_scad_futura:
+    _chips.append(("", "Solo scadenza futura"))
+if solo_ateco_comp:
+    _chips.append(("", "Solo ATECO compatibile"))
+if not solo_imprese:
+    _chips.append(("", "Incluse ricerca/università", "warn"))
+if _chips:
+    st.markdown(ui.chips_html(_chips), unsafe_allow_html=True)
 
 # ======================= APPLICA FILTRI =======================
 d = df.copy()
@@ -207,13 +247,37 @@ with r3:
     pagina = st.selectbox("Pagina", options=list(range(1, n_pagine + 1)),
                           format_func=lambda p: f"Pagina {p}/{n_pagine}", label_visibility="collapsed")
 
+@st.dialog("Dettaglio bando", width="large")
+def _dettaglio(row):
+    st.markdown(ui.detail_html(row, ateco_query), unsafe_allow_html=True)
+    link = row.get("link")
+    if link and str(link).startswith("http"):
+        st.link_button("Apri la scheda ufficiale", link, icon=":material/open_in_new:",
+                       type="primary", use_container_width=True)
+
+
 if tot == 0:
     st.warning("Nessun bando corrisponde ai filtri selezionati. Prova ad allentare i criteri.")
 else:
     start = (pagina - 1) * per_pagina
     fetta = d.iloc[start:start + per_pagina]
-    cards = "".join(ui.card_html(row, ateco_query=ateco_query) for _, row in fetta.iterrows())
-    st.markdown(f'<div class="cards-grid">{cards}</div>', unsafe_allow_html=True)
+    grid = st.columns(2)
+    for i, (_, row) in enumerate(fetta.iterrows()):
+        with grid[i % 2]:
+            with st.container(border=True):
+                st.markdown(ui.card_body_html(row, ateco_query), unsafe_allow_html=True)
+                b1, b2 = st.columns(2)
+                with b1:
+                    if st.button("Dettagli", key=f"det_{row['id']}", icon=":material/read_more:",
+                                 use_container_width=True):
+                        _dettaglio(row)
+                with b2:
+                    link = row.get("link")
+                    if link and str(link).startswith("http"):
+                        st.link_button("Apri", link, icon=":material/open_in_new:",
+                                       type="primary", use_container_width=True)
+                    else:
+                        st.button("Link n/d", key=f"nd_{row['id']}", disabled=True, use_container_width=True)
 
 # ======================= EXPORT + TABELLA + LOG =======================
 st.divider()
