@@ -5,7 +5,7 @@ name: Aggiornamento bandi
 on:
   schedule:
     # 05:00 UTC ≈ 07:00 in Italia (ora legale) / 06:00 (ora solare).
-    - cron: "0 5 * * *"
+    - cron: "0 */3 * * *"
   workflow_dispatch: {}      # permette anche l'avvio manuale dalla tab "Actions"
 
 permissions:
