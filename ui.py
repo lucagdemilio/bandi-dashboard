@@ -200,7 +200,7 @@ def brand_title() -> str:
   <div class="mono">SLC</div>
   <div class="name">
     <div class="firm">Studio Lombardo - Culotta</div>
-    <div class="role">Consulenza legale e finanziaria</div>
+    <div class="role">Studio legale e consulenza progettuale alle imprese</div>
   </div>
 </div>
 """

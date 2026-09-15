@@ -13,6 +13,14 @@ st.set_page_config(page_title="Studio Lombardo-Culotta · Bandi", layout="wide",
 init_db()
 ui.inject_css(st)
 
+# Auto-refresh della vista ogni 5 minuti: ricarica i dati più recenti dal
+# database senza intervento manuale (NON riesegue lo scraping, solo la lettura).
+try:
+    from streamlit_autorefresh import st_autorefresh
+    st_autorefresh(interval=5 * 60 * 1000, key="auto_refresh_5min")
+except Exception:
+    pass
+
 SETTORI_MACRO = [
     "Agricoltura, silvicoltura e pesca", "Agroalimentare", "Alberghiero", "Altri servizi",
     "Artigianato", "Autoveicoli e altri mezzi di trasporto", "Chimica e Farmaceutica",
