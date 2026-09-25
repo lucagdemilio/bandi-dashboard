@@ -165,19 +165,20 @@ html { font-size: 17px; }
 .detail .note { margin-top:.8rem; background:#f4f6f9; border-radius:9px; padding:.6rem .8rem;
    font-size:.85rem; color:#3d4753; }
 
-/* Schede (tabs) come bottoni */
-[data-testid="stTabs"] [data-baseweb="tab-list"] { gap:.5rem; border-bottom:none; }
+/* Schede (tabs) come bottoni — selettori ARIA standard (stabili tra versioni) */
+[data-testid="stTabs"] [role="tablist"] { gap:.5rem; border-bottom:none !important; }
 [data-testid="stTabs"] [data-baseweb="tab-highlight"],
 [data-testid="stTabs"] [data-baseweb="tab-border"] { display:none !important; }
-[data-testid="stTabs"] [data-baseweb="tab"] {
-   background:#eef2f8; border:1px solid var(--line); border-radius:10px;
-   padding:.5rem 1.2rem; font-weight:700; color:var(--nav); height:auto;
+[data-testid="stTabs"] button[role="tab"] {
+   background:#eef2f8 !important; border:1px solid var(--line) !important; border-radius:10px !important;
+   padding:.5rem 1.2rem !important; font-weight:700 !important; color:var(--nav) !important; height:auto !important;
    transition: background .12s, color .12s, border-color .12s; }
-[data-testid="stTabs"] [data-baseweb="tab"]:hover { background:#e2e9f3; }
-[data-testid="stTabs"] [data-baseweb="tab"] [data-testid="stMarkdownContainer"] p { font-weight:700; }
-[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
-   background:var(--nav); border-color:var(--nav); box-shadow:0 2px 8px rgba(20,56,95,.25); }
-[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] * { color:#fff !important; }
+[data-testid="stTabs"] button[role="tab"]:hover { background:#e2e9f3 !important; }
+[data-testid="stTabs"] button[role="tab"] p { font-weight:700 !important; color:inherit !important; }
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+   background:var(--nav) !important; border-color:var(--nav) !important; color:#fff !important;
+   box-shadow:0 2px 8px rgba(20,56,95,.25); }
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] * { color:#fff !important; }
 
 /* Badge */
 .badge { display:inline-flex; align-items:center; gap:.3rem; font-size:.71rem; font-weight:700;
