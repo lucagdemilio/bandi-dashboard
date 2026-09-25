@@ -142,7 +142,9 @@ html { font-size: 17px; }
 .bando .top { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-bottom:.5rem; }
 .bando .title { font-size:1.02rem; font-weight:650; color:var(--ink); margin:.1rem 0 .45rem; line-height:1.35;
    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-.bando .meta { display:flex; flex-wrap:wrap; gap:.3rem 1rem; color:var(--muted); font-size:.82rem; margin-bottom:.5rem; }
+.bando .meta { display:flex; flex-wrap:wrap; gap:.3rem 1rem; color:var(--muted); font-size:.82rem;
+   margin-bottom:.5rem; overflow-wrap:anywhere; word-break:break-word; }
+.bando .meta span { max-width:100%; }
 .bando .meta b { color:#3d4753; font-weight:600; }
 .bando .scadline { border-top:1px solid var(--line); padding-top:.5rem; margin-top:.2rem; }
 
@@ -162,6 +164,20 @@ html { font-size: 17px; }
 .detail .drow .dv { color:var(--ink); }
 .detail .note { margin-top:.8rem; background:#f4f6f9; border-radius:9px; padding:.6rem .8rem;
    font-size:.85rem; color:#3d4753; }
+
+/* Schede (tabs) come bottoni */
+[data-testid="stTabs"] [data-baseweb="tab-list"] { gap:.5rem; border-bottom:none; }
+[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+[data-testid="stTabs"] [data-baseweb="tab-border"] { display:none !important; }
+[data-testid="stTabs"] [data-baseweb="tab"] {
+   background:#eef2f8; border:1px solid var(--line); border-radius:10px;
+   padding:.5rem 1.2rem; font-weight:700; color:var(--nav); height:auto;
+   transition: background .12s, color .12s, border-color .12s; }
+[data-testid="stTabs"] [data-baseweb="tab"]:hover { background:#e2e9f3; }
+[data-testid="stTabs"] [data-baseweb="tab"] [data-testid="stMarkdownContainer"] p { font-weight:700; }
+[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
+   background:var(--nav); border-color:var(--nav); box-shadow:0 2px 8px rgba(20,56,95,.25); }
+[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] * { color:#fff !important; }
 
 /* Badge */
 .badge { display:inline-flex; align-items:center; gap:.3rem; font-size:.71rem; font-weight:700;
@@ -250,10 +266,13 @@ def _scad_html(scadenza, giorni) -> str:
     return '<span class="scad-info">Scadenza non indicata / a sportello</span>'
 
 
-def _kv(label: str, value) -> str:
+def _kv(label: str, value, maxlen: int = None) -> str:
     if value is None or (isinstance(value, float) and pd.isna(value)) or str(value).strip() in ("", "None", "nan"):
         return ""
-    return f'<span><b>{label}:</b> {html.escape(str(value))}</span>'
+    v = str(value).strip()
+    if maxlen and len(v) > maxlen:
+        v = v[:maxlen - 1].rstrip(" ,;·-") + "…"
+    return f'<span><b>{label}:</b> {html.escape(v)}</span>'
 
 
 def _badges(row, ateco_query=None) -> str:
@@ -272,11 +291,13 @@ def card_body_html(row, ateco_query=None) -> str:
     giorni = row.get("giorni_scadenza")
     scadenza = row.get("data_scadenza")
 
+    # Nella card i valori lunghi vengono abbreviati per restare dentro il box;
+    # il testo completo resta nella finestra di dettaglio.
     meta_parts = [
-        _kv("Ente", row.get("ente")),
-        _kv("Programma", row.get("programma")),
-        _kv("Tipo", row.get("tipo_agevolazione")),
-        _kv("Settore", row.get("settore")),
+        _kv("Ente", row.get("ente"), maxlen=55),
+        _kv("Programma", row.get("programma"), maxlen=45),
+        _kv("Tipo", row.get("tipo_agevolazione"), maxlen=45),
+        _kv("Settore", row.get("settore"), maxlen=60),
     ]
     meta = "".join(p for p in meta_parts if p)
 
