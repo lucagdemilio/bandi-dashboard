@@ -139,3 +139,30 @@ def get_last_log():
             "SELECT * FROM log_scraping ORDER BY id DESC LIMIT 20"
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+# ----------------------- Anagrafica clienti (DB separato) -----------------------
+CLIENTI_DB_PATH = Path(__file__).parent / "data" / "clienti.db"
+
+
+def clienti_disponibili() -> bool:
+    return CLIENTI_DB_PATH.exists()
+
+
+def get_clienti(db_path=None) -> list:
+    """Ritorna tutti i clienti (lista di dict). db_path opzionale (es. DB
+    decifrato); default: CLIENTI_DB_PATH. Lista vuota se il file non esiste."""
+    path = Path(db_path) if db_path else CLIENTI_DB_PATH
+    if not path.exists():
+        return []
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = conn.execute(
+            "SELECT piva, ragione_sociale, provincia, ateco, ateco_fmt, "
+            "ricavi, dipendenti, chiusura_bilancio FROM clienti "
+            "ORDER BY ragione_sociale"
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()

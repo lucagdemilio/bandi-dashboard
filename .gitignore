@@ -15,3 +15,9 @@ data/_debug_eu_raw.json
 
 # NB: data/bandi.db è VOLUTAMENTE tracciato, così l'app in cloud parte
 # già popolata e GitHub Actions lo aggiorna ogni giorno.
+
+# DATI CLIENTI SENSIBILI — non committare mai su repo pubblico
+Lista codici ateco e p.iva.xlsx
+*.xlsx
+data/clienti.db
+data/clienti*.csv

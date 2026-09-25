@@ -174,6 +174,30 @@ gratuita. Architettura:
 
 Nessun segreto/API key da configurare: tutte le fonti sono pubbliche.
 
-> **Privacy**: oggi l'app contiene solo dati pubblici (bandi), quindi l'hosting è
-> senza rischi. Quando aggiungeremo il *portafoglio clienti* (aziende + ATECO),
-> valuteremo dove tenere quei dati (cifrati o su istanza privata).
+> **Privacy**: i bandi sono dati pubblici. Il *portafoglio clienti* (vedi sotto)
+> contiene invece dati sensibili e va tenuto fuori dai repo pubblici.
+
+## 9. Portafoglio clienti (matching ATECO)
+
+Scheda **"Portafoglio clienti"** che incrocia l'anagrafica delle aziende con i
+bandi tramite il codice ATECO.
+
+**Import dell'anagrafica** (da un file Excel con colonne: Ragione sociale,
+Provincia, Chiusura bilancio, Ricavi, Dipendenti, ATECO 2007, Partita IVA):
+```bash
+venv/bin/python importa_clienti.py "Lista codici ateco e p.iva.xlsx"
+```
+Lo script ripulisce i dati (ripristina gli zeri iniziali persi da Excel: P.IVA a
+11 cifre, ATECO a 6 cifre) e crea **`data/clienti.db`** (database separato).
+
+**Nella scheda** ogni cliente mostra, alla selezione, i bandi aperti divisi in:
+- **Specifici per il settore** — bandi che citano il suo codice ATECO
+- **Aperti a tutti i settori** — validi per ogni impresa
+- **Territoriali** — Sicilia / IRFIS
+
+Logica di matching: `scrapers/utils.py` → `ateco_status()` (confronto gerarchico);
+indice in `app.py` → `compat_index()`.
+
+> ⚠️ **DATI SENSIBILI**: il file Excel e `data/clienti.db` sono in `.gitignore` e
+> NON vanno su un repository pubblico. Per usare questa scheda online il
+> repository deve essere **privato** (con Streamlit autorizzato ai repo privati).
